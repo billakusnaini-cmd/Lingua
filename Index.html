@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#6A11CB" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<title>LinguaQuest</title>
+<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22LinguaQuest%22,%22short_name%22:%22LQ%22,%22start_url%22:%22./%22,%22display%22:%22standalone%22,%22background_color%22:%22%230f0c29%22,%22theme_color%22:%22%236A11CB%22,%22icons%22:[{%22src%22:%22icon-192.png%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22}]}">
+<link rel="apple-touch-icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%236A11CB'/><text x='50%' y='55%' text-anchor='middle' fill='white' font-size='40' font-family='Orbitron, sans-serif'>LQ</text></svg>">
+<style id="global-styles">
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@500;600&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+--primary: #6A11CB;
+--secondary: #FF416C;
+--accent: #00F5A8;
+--light-bg: #0f0c29;
+--dark-text: #ffffff;
+--gray: #aaa;
+--safe-top: env(safe-area-inset-top);
+--safe-bottom: env(safe-area-inset-bottom);
+}
+body {
+font-family: 'Rajdhani', 'Orbitron', sans-serif;
+background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+color: var(--dark-text);
+overflow-x: hidden;
+overscroll-behavior-y: contain;
+transition: background 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+min-height: 100vh;
+}
+#main-container {
+min-height: 100vh;
+padding-bottom: calc(80px + var(--safe-bottom));
+padding-top: calc(20px + var(--safe-top));
+position: relative;
+z-index: 1;
+}
+/* === RADIAL FAB MENU === */
+#fab {
+position: fixed;
+bottom: 100px;
+right: 20px;
+width: 64px;
+height: 64px;
+border-radius: 50%;
+background: linear-gradient(135deg, var(--secondary), #ff4b2b);
+color: white;
+border: none;
+font-size: 26px;
+box-shadow: 0 6px 24px rgba(255, 65, 108, 0.6);
+z-index: 101;
+display: flex;
+align-items: center;
+justify-content: center;
+animation: fabPulse 2s infinite;
+transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+font-family: 'Orbitron', sans-serif;
+font-weight: bold;
+}
+#fab:hover {
+transform: scale(1.1) rotate(5deg);
+box-shadow: 0 8px 32px rgba(255, 65, 108, 0.9);
+}
+#fab:active {
+transform: scale(0.9) rotate(-5deg);
+}
+@keyframes fabPulse {
+0%, 100% { box-shadow: 0 6px 24px rgba(255, 65, 108, 0.6); }
+50% { box-shadow: 0 10px 40px rgba(255, 65, 108, 0.9); }
+}
+/* === BOTTOM NAV === */
+#bottom-nav {
+position: fixed;
+bottom: 0;
+left: 0;
+right: 0;
+display: flex;
+justify-content: space-around;
+align-items: center;
+height: 80px;
+background: rgba(15, 12, 41, 0.92);
+border-top: 2px solid rgba(106, 17, 203, 0.5);
+padding: 0 8px calc(var(--safe-bottom) + 8px);
+backdrop-filter: blur(12px);
+z-index: 100;
+box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+}
+#bottom-nav button {
+background: none;
+border: none;
+font-size: 10px;
+color: var(--gray);
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 4px;
+padding: 6px 0;
+cursor: pointer;
+position: relative;
+transition: all 0.2s ease;
+font-weight: 600;
+}
+#bottom-nav button.active {
+color: var(--accent);
+transform: translateY(-4px);
+text-shadow: 0 0 8px rgba(0, 245, 168, 0.7);
+}
+#bottom-nav i {
+font-size: 22px;
+filter: drop-shadow(0 0 4px rgba(106, 17, 203, 0.6));
+}
+.badge {
+position: absolute;
+top: -2px;
+right: 8px;
+background: var(--secondary);
+color: white;
+font-size: 9px;
+width: 18px;
+height: 18px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-weight: bold;
+box-shadow: 0 0 6px rgba(255, 65, 108, 0.8);
+animation: pulseBadge 1.5s infinite alternate;
+}
+@keyframes pulseBadge {
+0% { transform: scale(1); }
+100% { transform: scale(1.15); }
+}
+/* === SWIPE PANEL → MISSION CONTROL === */
+#swipe-panel {
+position: fixed;
+bottom: calc(80px + var(--safe-bottom));
+left: 0;
+right: 0;
+background: rgba(20, 18, 45, 0.95);
+padding: 20px 16px;
+border-top: 2px solid rgba(106, 17, 203, 0.4);
+transform: translateY(100%);
+transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.27);
+z-index: 99;
+box-shadow: 0 -6px 24px rgba(0,0,0,0.3);
+backdrop-filter: blur(16px);
+border-radius: 24px 24px 0 0;
+max-height: 80vh;
+overflow-y: auto;
+}
+#swipe-panel.visible {
+transform: translateY(0);
+}
+/* === CARD & BUTTON STYLING === */
+.card {
+background: rgba(30, 28, 60, 0.7);
+border-radius: 20px;
+padding: 20px;
+margin: 14px;
+box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+border: 1px solid rgba(106, 17, 203, 0.3);
+backdrop-filter: blur(8px);
+}
+.btn {
+padding: 14px 24px;
+border: none;
+border-radius: 16px;
+font-weight: bold;
+cursor: pointer;
+display: inline-block;
+text-align: center;
+transition: all 0.2s ease;
+font-size: 15px;
+font-family: 'Rajdhani', sans-serif;
+letter-spacing: 0.5px;
+}
+.btn-primary { background: linear-gradient(to right, var(--primary), #8E2DE2); color: white; }
+.btn-accent { background: linear-gradient(to right, var(--secondary), #ff4b2b); color: white; }
+.btn-gray { background: rgba(255,255,255,0.15); color: white; }
+.btn:active {
+opacity: 0.9;
+transform: scale(0.96);
+}
+/* === PROGRESS ORB === */
+.progress-ring {
+width: 44px;
+height: 44px;
+border-radius: 50%;
+background: conic-gradient(var(--accent) 0% calc(var(--pct, 0) * 1%), rgba(255,255,255,0.1) calc(var(--pct, 0) * 1%) 100%);
+display: flex;
+align-items: center;
+justify-content: center;
+color: white;
+font-size: 12px;
+font-weight: bold;
+box-shadow: inset 0 0 0 2px rgba(0,0,0,0.4), 0 0 12px rgba(0, 245, 168, 0.5);
+font-family: 'Orbitron', sans-serif;
+}
+/* === QUEST LIST === */
+.quest-list {
+display: flex;
+flex-direction: column;
+gap: 12px;
+}
+.quest-item {
+background: rgba(255,255,255,0.08);
+border-left: 4px solid var(--accent);
+padding: 14px;
+border-radius: 0 12px 12px 0;
+cursor: pointer;
+transition: all 0.2s;
+}
+.quest-item:hover {
+background: rgba(0,245,168,0.15);
+transform: translateX(4px);
+}
+.quest-item.completed {
+border-left-color: #aaa;
+opacity: 0.7;
+}
+.quest-reward {
+font-size: 12px;
+color: gold;
+font-weight: bold;
+float: right;
+}
+/* === MARKETPLACE ITEM === */
+.market-item {
+background: rgba(255,255,255,0.08);
+border-radius: 16px;
+padding: 12px 8px;
+text-align: center;
+cursor: pointer;
+transition: all 0.2s;
+}
+.market-item:hover {
+background: rgba(0,245,168,0.15);
+transform: scale(1.03);
+}
+.sell-btn {
+background: rgba(255,65,108,0.3);
+color: white;
+font-size: 11px;
+padding: 4px 8px;
+border-radius: 8px;
+margin-top: 4px;
+cursor: pointer;
+}
+.sell-btn:hover {
+background: var(--secondary);
+}
+/* === MISC === */
+input[type="checkbox"] {
+accent-color: var(--secondary);
+}
+label {
+display: flex;
+align-items: center;
+gap: 8px;
+margin-top: 14px;
+font-size: 14px;
+color: white;
+}
+</style>
+</head>
+<body>
+<div id="main-container"></div>
+<!-- Bottom Nav -->
+<nav id="bottom-nav">
+<button data-tab="quest"><i>⚔️</i> Quest</button>
+<button data-tab="arena"><i>🎯</i> Arena</button>
+<button data-tab="meme"><i>😂</i> Meme</button>
+<button data-tab="shop"><i>🛒</i> Shop</button>
+<button data-tab="progress"><i>🏆</i> <span id="nav-level">Lv ?</span></button>
+</nav>
+<!-- FAB -->
+<button id="fab">⚔️</button>
+<!-- Swipe Panel -->
+<div id="swipe-panel">
+<div class="streak-card">
+🔥 Streak: <strong id="panel-streak">0</strong> | 💎 <span id="panel-xp">0</span> XP | 🪙 <span id="panel-coins">0</span>
+<div class="progress-ring" style="--pct:0;" id="ring-xp">0%</div>
+</div>
+<div class="world-pulse" id="world-pulse">🌆 City is waking up...</div>
+<div class="daily-challenge">
+🎯 Mission: <span id="daily-task">Rekam 1 kalimat tentang makanan!</span>
+</div>
+<div class="group-challenge" id="group-challenge">
+🆔 ID Anda: <strong id="user-id">LQ-XXXXX</strong>
+<div class="progress-ring" style="--pct:62;" id="ring-group">62%</div>
+</div>
+<div class="quick-actions">
+<button class="btn btn-primary" onclick="simulateRecord()">🎤 Just Talk (30s)</button>
+<button class="btn btn-accent" onclick="showMemeOfTheDay()">😂 Meme of the Day</button>
+</div>
+<label>
+<input type="checkbox" id="silent-mode-toggle" onchange="SilentMode.toggle()"> 🔇 Silent Mode
+</label>
+<div class="motivation-quote" id="motivation-quote">You’re sounding more natural every day! 😊</div>
+</div>
+<script>
+// ────────────────────────────────────────────────────────────────
+// 🔌 NETWORK ABSTRACTION
+// ────────────────────────────────────────────────────────────────
+const Network = {
+ENDPOINT: 'https://script.google.com/macros/s/YOUR_GAS_DEPLOY_ID/exec',
+async post(action, payload) {
+try {
+const res = await fetch(this.ENDPOINT, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ action, ...payload })
+});
+if (!res.ok) throw new Error('Network error');
+return await res.json();
+} catch (e) {
+console.warn('Offline or network error:', e);
+return { success: false, error: 'offline' };
+}
+},
+isOnline() {
+return navigator.onLine;
+}
+};
+// ────────────────────────────────────────────────────────────────
+// 💾 STORAGE ABSTRACTION
+// ────────────────────────────────────────────────────────────────
+const Storage = {
+async get(key) {
+return JSON.parse(localStorage.getItem(`lq_${key}`)) || null;
+},
+async set(key, value) {
+localStorage.setItem(`lq_${key}`, JSON.stringify(value));
+},
+async syncFromRemote(remoteState) {
+if (!remoteState) return;
+await this.set('userXP', remoteState.xp);
+await this.set('userCoins', remoteState.coins);
+await this.set('inventory', remoteState.inventory || {});
+await this.set('lastLoginDate', remoteState.lastLogin);
+await this.set('userStreak', remoteState.streak);
+await this.set('userID', remoteState.userID);
+await this.set('groupProgress', remoteState.groupProgress);
+await this.set('botMemory', remoteState.botMemory || {});
+await this.set('sessionHistory', remoteState.history || []);
+await this.set('silentMode', remoteState.silentMode);
+},
+async pushToRemote(state) {
+if (!Network.isOnline()) return;
+await Network.post('sync', state);
+}
+};
+// ────────────────────────────────────────────────────────────────
+// 🔑 GENERATE USER ID UNIK & PERSISTEN
+// ────────────────────────────────────────────────────────────────
+function generateUserID() {
+const existing = localStorage.getItem('lq_userID');
+if (existing) return existing;
+const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+let result = 'LQ-';
+for (let i = 0; i < 5; i++) {
+result += chars.charAt(Math.floor(Math.random() * chars.length));
+}
+localStorage.setItem('lq_userID', result);
+return result;
+}
+// ────────────────────────────────────────────────────────────────
+// 🧠 GAME STATE — DENGAN SUPPORT MARKETPLACE
+// ────────────────────────────────────────────────────────────────
+const GameState = {
+userXP: 0,
+userCoins: 0,
+userStreak: 0,
+lastLoginDate: null,
+sessionHistory: [],
+botMemory: {},
+userID: '',
+groupTarget: 500,
+groupProgress: 0,
+silentMode: false,
+inventory: {},
+marketCatalog: [],
+async init() {
+this.userXP = (await Storage.get('userXP')) || 0;
+this.userCoins = (await Storage.get('userCoins')) || 0;
+this.userStreak = (await Storage.get('userStreak')) || 0;
+this.lastLoginDate = await Storage.get('lastLoginDate');
+this.sessionHistory = (await Storage.get('sessionHistory')) || [];
+this.botMemory = (await Storage.get('botMemory')) || {};
+this.userID = (await Storage.get('userID')) || generateUserID();
+this.groupProgress = (await Storage.get('groupProgress')) || Math.min(this.groupTarget, Math.floor(Math.random() * 400) + 100 + this.userXP);
+this.silentMode = (await Storage.get('silentMode')) === true;
+this.inventory = (await Storage.get('inventory')) || {};
+this.marketCatalog = (await Storage.get('marketCatalog')) || [];
+if (Network.isOnline()) {
+const remote = await Network.post('load', {});
+if (remote.success) {
+Object.assign(this, {
+userXP: remote.xp,
+userCoins: remote.coins,
+userStreak: remote.streak,
+lastLoginDate: remote.lastLogin,
+sessionHistory: remote.history || [],
+botMemory: remote.botMemory || {},
+userID: remote.userID,
+groupProgress: remote.groupProgress,
+inventory: remote.inventory || {},
+silentMode: remote.silentMode
+});
+await Storage.syncFromRemote(remote);
+}
+const marketRes = await Network.post('market_listings');
+if (marketRes.success) {
+this.marketCatalog = marketRes.items || [];
+await Storage.set('marketCatalog', this.marketCatalog);
+}
+}
+const today = new Date().toDateString();
+if (this.lastLoginDate !== today) {
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+if (this.lastLoginDate === yesterday.toDateString()) {
+this.userStreak++;
+this.userCoins += Math.min(this.userStreak * 2, 20);
+} else {
+this.userStreak = 1;
+}
+this.lastLoginDate = today;
+await this.save(true);
+}
+},
+async save(pushRemote = false) {
+await Storage.set('userXP', this.userXP);
+await Storage.set('userCoins', this.userCoins);
+await Storage.set('userStreak', this.userStreak);
+await Storage.set('lastLoginDate', this.lastLoginDate);
+await Storage.set('sessionHistory', this.sessionHistory);
+await Storage.set('botMemory', this.botMemory);
+await Storage.set('userID', this.userID);
+await Storage.set('groupProgress', this.groupProgress);
+await Storage.set('inventory', this.inventory);
+await Storage.set('silentMode', this.silentMode);
+await Storage.set('marketCatalog', this.marketCatalog);
+if (pushRemote && Network.isOnline()) {
+await Network.post('sync', {
+xp: this.userXP,
+coins: this.userCoins,
+streak: this.userStreak,
+lastLogin: this.lastLoginDate,
+history: this.sessionHistory,
+botMemory: this.botMemory,
+userID: this.userID,
+groupProgress: this.groupProgress,
+inventory: this.inventory,
+silentMode: this.silentMode
+});
+}
+},
+async grantReward(context, xp = 0, coins = 0, items = []) {
+this.userXP += xp;
+this.userCoins += coins;
+this.groupProgress += xp;
+for (const item of items) {
+this.inventory[item] = (this.inventory[item] || 0) + 1;
+}
+await this.save(true);
+},
+get userLevel() { return Math.floor(this.userXP / 100) + 1; },
+get dailyTask() {
+const tasks = [
+"Rekam: ‘I love nasi goreng!’",
+"Rekam: ‘Where is the bathroom?’",
+"Rekam: ‘Can I pay by card?’",
+"Rekam: ‘My flight is delayed.’"
+];
+let task = tasks[Math.floor(Math.random() * tasks.length)];
+if (this.botMemory.lastError === 'eated') task = "Rekam: ‘Yesterday I ate pizza.’";
+else if (this.botMemory.lastError === 'he go') task = "Rekam: ‘He goes to school every day.’";
+return task;
+}
+};
+// ────────────────────────────────────────────────────────────────
+// 🛍️ MARKETPLACE SYSTEM — CENTRALIZED + TAX
+// ────────────────────────────────────────────────────────────────
+const MARKET_TAX_RATE = 0.15;
+async function buyItemFromMarket(itemID) {
+const item = GameState.marketCatalog.find(i => i.id === itemID);
+if (!item) return UIRenderer.showModal("❌ Item tidak tersedia.");
+if (GameState.userCoins < item.price) return UIRenderer.showModal("🪙 Koin tidak cukup!");
+GameState.userCoins -= item.price;
+GameState.inventory[itemID] = (GameState.inventory[itemID] || 0) + 1;
+if (Network.isOnline()) {
+await Network.post('market_purchase', { itemID, buyerID: GameState.userID });
+}
+await GameState.save(true);
+UIRenderer.renderApp('shop');
+UIRenderer.showModal(`✅ Berhasil beli: ${item.name}!`);
+}
+async function sellItemToMarket(itemID, quantity = 1) {
+quantity = parseInt(quantity) || 1;
+if (quantity <= 0) return;
+const owned = GameState.inventory[itemID] || 0;
+if (owned < quantity) return UIRenderer.showModal("❌ Item tidak cukup!");
+let marketPrice = 10;
+const catalogItem = GameState.marketCatalog.find(i => i.id === itemID);
+if (catalogItem) {
+marketPrice = catalogItem.price;
+} else {
+marketPrice = Math.max(5, Math.floor(Math.random() * 30) + 10);
+}
+const gross = marketPrice * quantity;
+const tax = Math.floor(gross * MARKET_TAX_RATE);
+const net = gross - tax;
+GameState.inventory[itemID] -= quantity;
+if (GameState.inventory[itemID] <= 0) delete GameState.inventory[itemID];
+GameState.userCoins += net;
+if (Network.isOnline()) {
+await Network.post('market_deposit', {
+itemID,
+itemName: catalogItem?.name || itemID.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+quantity,
+sellerID: GameState.userID,
+taxCollected: tax,
+grossValue: gross
+});
+}
+await GameState.save(true);
+UIRenderer.renderApp('shop');
+UIRenderer.showModal(`✅ Terjual ${quantity}x ${itemID}!\n🪙 +${net} (pajak: ${tax})`);
+}
+// ────────────────────────────────────────────────────────────────
+// 📘 ARTIKEL + VERIFIKASI REWARD
+// ────────────────────────────────────────────────────────────────
+function openArticle(slug) {
+const urls = {
+'grammar-basics': 'https://mailonasa.blogspot.com/p/grammar-basics.html',
+'common-phrases': 'https://mailonasa.blogspot.com/p/common-phrases.html',
+'idioms': 'https://mailonasa.blogspot.com/p/idioms.html',
+'pronunciation-tips': 'https://mailonasa.blogspot.com/p/pronunciation-tips.html'
+};
+const url = urls[slug];
+if (url) {
+window.open(url, '_blank');
+}
+}
+// ────────────────────────────────────────────────────────────────
+// 🎮 LAUNCH GAME MODULAR
+// ────────────────────────────────────────────────────────────────
+function launchGame(type) {
+switch(type) {
+case 'farming':
+window.open('./farming.html?uid=' + encodeURIComponent(GameState.userID), '_blank');
+break;
+default:
+UIRenderer.showModal('🎮 Game ini belum tersedia. Tapi segera hadir!');
+}
+}
+// ────────────────────────────────────────────────────────────────
+// 🧪 CLAIM REWARD DARI ARTIKEL (ANTI-CHEAT VIA QUIZ)
+// ────────────────────────────────────────────────────────────────
+function processArticleClaim() {
+const urlParams = new URLSearchParams(window.location.search);
+const claim = urlParams.get('claim');
+const answer = urlParams.get('ans');
+const uid = urlParams.get('uid');
+
+if (!claim || !answer || uid !== GameState.userID) {
+return;
+}
+
+// Bersihkan URL
+history.replaceState(null, '', location.pathname);
+
+const correctAnswers = {
+'grammar-basics': 'c',
+'common-phrases': 'b',
+'idioms': 'a',
+'pronunciation-tips': 'c'
+};
+
+const isCorrect = answer === correctAnswers[claim];
+const articleName = claim.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+const claimedKey = `claimed_article_${claim}`;
+
+if (isCorrect && !localStorage.getItem(claimedKey)) {
+localStorage.setItem(claimedKey, '1');
+GameState.grantReward('article', 20, 8);
+UIRenderer.showModal(`✅ Benar! Kamu paham ${articleName}!<br>+20 XP • +8 🪙`);
+} else if (!isCorrect) {
+UIRenderer.showModal(`❌ Jawaban salah.<br>Coba baca lagi artikelnya!`);
+}
+}
+// ────────────────────────────────────────────────────────────────
+// MODUL-MODUL
+// ────────────────────────────────────────────────────────────────
+const ModulQuest = {
+getQuests() {
+return [
+{id:'q1',desc:"Latih pelafalan dasar",reward:10,completed:GameState.userXP>=10},
+{id:'q2',desc:"Selesaikan 1 Daily Task",reward:15,completed:GameState.sessionHistory.some(s=>!s.error&&s.context!=='arena')},
+{id:'q3',desc:"Perbaiki 1 kesalahan grammar",reward:20,completed:GameState.sessionHistory.some(s=>s.error)},
+{id:'q4',desc:"Mainkan Pronunciation Arena",reward:25,completed:GameState.sessionHistory.some(s=>s.context==='arena')},
+{id:'q5',desc:"Jaga streak 3 hari berturut-turut",reward:50,completed:GameState.userStreak>=3}
+];
+},
+render() {
+const quests = this.getQuests();
+let html = `<div class="card"><h3 style="color:var(--accent);">⚔️ Daily Quest</h3><div class="quest-list">`;
+quests.forEach(q => {
+const status = q.completed ? 'completed' : '';
+const action = q.completed ? '' : `onclick="ModulQuest.start('${q.id}')"`;
+html += `<div class="quest-item ${status}" ${action}>${q.desc} <span class="quest-reward">+${q.reward} XP</span></div>`;
+});
+html += `</div></div>`;
+return html;
+},
+start(id) {
+switch(id) {
+case 'q1': case 'q2': case 'q3': simulateRecord(); break;
+case 'q4': ModulArena.startRound(); break;
+case 'q5': UIRenderer.showModal("🔥 Jaga streakmu!"); break;
+}
+}
+};
+const ModulArena = {
+phrases: ["I love nasi goreng.","Where is the bathroom?","Can I pay by card?","My flight is delayed."],
+startRound() {
+const phrase = this.phrases[Math.floor(Math.random() * this.phrases.length)];
+UIRenderer.showModal(`<strong>🎯 Pronunciation Arena</strong><br>Ucapkan:<br><em>“${phrase}”</em>`);
+setTimeout(() => simulateArenaRecord(phrase), 1500);
+},
+async recordResult(score) {
+const xp = Math.floor(score / 10);
+const coin = Math.floor(score / 20);
+GameState.sessionHistory.unshift({ context: 'arena', xp, coin, timestamp: Date.now() });
+await GameState.grantReward('arena', xp, coin);
+UIRenderer.renderApp('arena');
+UIRenderer.showModal(`🎯 Skor: <strong>${score}/100</strong><br>+${xp} XP • +${coin} 🪙`);
+},
+renderHub() {
+return `
+<div class="card">
+<h3 style="color:var(--accent);">🎯 Arena & Pengetahuan</h3>
+<button class="btn btn-primary" onclick="ModulArena.startRound()">🗣️ Pronunciation Arena</button>
+
+<h4 style="margin:16px 0 8px;color:var(--accent);">📚 WikiBahasa</h4>
+<button class="btn btn-gray" onclick="openArticle('grammar-basics')">📘 Tata Bahasa</button>
+<button class="btn btn-gray" onclick="openArticle('common-phrases')">🌍 Ungkapan Umum</button>
+<button class="btn btn-gray" onclick="openArticle('idioms')">🎭 Idiom</button>
+<button class="btn btn-gray" onclick="openArticle('pronunciation-tips')">🗣️ Tips Pelafalan</button>
+
+<h4 style="margin:16px 0 8px;color:var(--accent);">🎮 Game Lainnya</h4>
+<button class="btn btn-accent" onclick="launchGame('farming')">🚜 Game Bertani</button>
+</div>
+`;
+}
+};
+const SilentMode = {
+toggle() {
+GameState.silentMode = !GameState.silentMode;
+document.getElementById('silent-mode-toggle').checked = GameState.silentMode;
+UIRenderer.showModal(GameState.silentMode ? "🔇 Silent Mode ON" : "🔊 Normal Mode");
+},
+isActive() { return GameState.silentMode; }
+};
+// ────────────────────────────────────────────────────────────────
+// SIMULASI RECORDING
+// ────────────────────────────────────────────────────────────────
+async function simulateRecord() {
+let msg, earnedCoins = 0, xp = 0;
+if (SilentMode.isActive()) {
+msg = `✅ Keren! Skor: 92/100<br>“Pronunciation sangat jelas!”`;
+delete GameState.botMemory.lastError;
+xp = 15; earnedCoins = 5;
+} else {
+const errors = ['eated', 'he go', null, null, null];
+const detectedError = errors[Math.floor(Math.random() * errors.length)];
+if (detectedError) {
+msg = `⚠️ Skor: 82/100<br>“Coba ganti ‘${detectedError}’ ya!”`;
+GameState.botMemory.lastError = detectedError;
+xp = 10; earnedCoins = 3;
+} else {
+msg = `✅ Keren! Skor: 95/100<br>“Pronunciation sangat jelas!”`;
+delete GameState.botMemory.lastError;
+xp = 15; earnedCoins = 5;
+}
+}
+GameState.sessionHistory.unshift({ context: 'speech', xp, coin: earnedCoins, error: GameState.botMemory.lastError, timestamp: Date.now() });
+await GameState.grantReward('speech', xp, earnedCoins);
+UIRenderer.showModal(msg);
+UIRenderer.renderApp(UIRenderer.getCurrentTab());
+}
+async function simulateArenaRecord(phrase) {
+const score = Math.floor(Math.random() * 30) + 70;
+ModulArena.recordResult(score);
+}
+// ────────────────────────────────────────────────────────────────
+// 🖼️ UI RENDERER
+// ────────────────────────────────────────────────────────────────
+const UIRenderer = {
+showModal(text) {
+const modal = document.createElement('div');
+modal.innerHTML = `<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;"><div class="card" style="max-width:85%;text-align:center;font-size:16px;line-height:1.4;background:rgba(25,23,50,0.95);border:1px solid var(--primary);">${text.replace(/\n/g, '<br>')}<button onclick="this.parentElement.parentElement.remove()" style="margin-top:14px;background:linear-gradient(to right,var(--primary),#8E2DE2);color:white;border:none;padding:10px 20px;border-radius:12px;margin-top:16px;font-family:'Rajdhani';">OK</button></div></div>`;
+document.body.appendChild(modal);
+},
+renderShop() {
+let html = `<div class="card"><h3 style="color:var(--accent);">🛒 Global Marketplace</h3><p>🪙 Koin: <strong>${GameState.userCoins}</strong></p><p>🆔 ID Anda: <strong>${GameState.userID}</strong></p>`;
+html += `<h4 style="margin-top:20px;color:var(--accent);">📦 Inventory Anda</h4>`;
+if (Object.keys(GameState.inventory).length === 0) {
+html += `<p style="font-size:14px;color:var(--gray);">Kosong. Main game lain untuk dapat item!</p>`;
+} else {
+html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;margin-top:10px;">`;
+for (const [itemID, qty] of Object.entries(GameState.inventory)) {
+html += `
+<div class="market-item">
+<span style="font-size:18px;">📦</span>
+<div style="font-size:12px;margin-top:4px;">${itemID}</div>
+<div style="font-size:11px;color:gold;">${qty}x</div>
+<div class="sell-btn" onclick="sellItemToMarket('${itemID}', prompt('Jumlah?', '${qty}'))">Jual ke Pasar</div>
+</div>`;
+}
+html += `</div>`;
+}
+html += `<h4 style="margin-top:24px;color:var(--accent);">🌍 Barang Tersedia</h4>`;
+if (GameState.marketCatalog.length === 0) {
+html += `<p style="font-size:14px;color:var(--gray);">Belum ada stok. Tunggu pemain lain jual!</p>`;
+} else {
+html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;margin-top:10px;">`;
+GameState.marketCatalog.forEach(item => {
+html += `
+<div class="market-item" onclick="buyItemFromMarket('${item.id}')">
+<span style="font-size:18px;">${item.icon || '🛍️'}</span>
+<div style="font-size:12px;margin-top:4px;">${item.name}</div>
+<div style="font-size:11px;color:gold;">${item.price} 🪙</div>
+<div style="font-size:10px;color:var(--gray);">${item.stock || '?'} stok</div>
+</div>`;
+});
+}
+html += `</div></div>`;
+return html;
+},
+renderApp(tab) {
+document.getElementById('main-container').className = '';
+document.querySelectorAll('#bottom-nav button').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+document.getElementById('nav-level').textContent = `Lv ${GameState.userLevel}`;
+let content = '';
+switch(tab) {
+case 'quest': content = ModulQuest.render(); break;
+case 'arena': content = ModulArena.renderHub(); break;
+case 'meme': content = `<div class="card"><h3>😂 Meme of the Day</h3><p>Kesalahan umum: “I eated...” → Harusnya “I ate...”</p><button class="btn btn-primary" onclick="simulateRecord()">🔁 Latihan Sekarang</button></div>`; break;
+case 'shop': content = this.renderShop(); break;
+case 'progress':
+const next = 100 - (GameState.userXP % 100);
+content = `<div class="card"><h3>🏆 Level ${GameState.userLevel}</h3><p>🔥 Streak: ${GameState.userStreak} | 💎 ${GameState.userXP} XP | 🪙 ${GameState.userCoins}</p><div style="margin-top:12px;height:10px;background:rgba(255,255,255,0.1);border-radius:5px;"><div style="width:${100-next}%;height:100%;background:linear-gradient(to right,var(--primary),var(--accent));"></div></div><p style="font-size:12px;text-align:right;">${100-next}/100 ke level berikutnya</p></div>`;
+break;
+default: content = ModulQuest.render();
+}
+document.getElementById('main-container').innerHTML = content;
+document.getElementById('panel-streak').textContent = GameState.userStreak;
+document.getElementById('panel-xp').textContent = GameState.userXP;
+document.getElementById('panel-coins').textContent = GameState.userCoins;
+document.getElementById('daily-task').textContent = GameState.dailyTask;
+document.getElementById('user-id').textContent = GameState.userID;
+document.getElementById('motivation-quote').textContent = ["Keep going!","You're leveling up fast!","One more try!"][GameState.userStreak % 3];
+document.getElementById('silent-mode-toggle').checked = GameState.silentMode;
+const xpPct = Math.min(100, GameState.userXP % 100);
+document.getElementById('ring-xp').style.setProperty('--pct', xpPct);
+document.getElementById('ring-xp').textContent = `${xpPct}%`;
+},
+getCurrentTab() {
+const hash = location.hash.slice(1);
+return ['quest','arena','meme','shop','progress'].includes(hash) ? hash : 'quest';
+}
+};
+// ────────────────────────────────────────────────────────────────
+// 🌍 WORLD PULSE
+// ────────────────────────────────────────────────────────────────
+const WorldPulse = {
+init() {
+setInterval(() => {
+const hour = new Date().getHours();
+let msg = "🌆 City is alive...";
+if (hour >= 5 && hour < 12) msg = "🌅 Morning rush! 217 warriors training!";
+else if (hour >= 17) msg = "🌇 Evening grind! Don’t stop now!";
+document.getElementById('world-pulse').textContent = msg;
+}, 60000);
+}
+};
+// ────────────────────────────────────────────────────────────────
+// 🧭 EVENT HANDLERS
+// ────────────────────────────────────────────────────────────────
+document.getElementById('fab').addEventListener('click', () => {
+document.getElementById('swipe-panel').classList.toggle('visible');
+});
+function showMemeOfTheDay() {
+location.hash = '#meme';
+document.getElementById('swipe-panel').classList.remove('visible');
+}
+window.addEventListener('hashchange', () => {
+UIRenderer.renderApp(UIRenderer.getCurrentTab());
+});
+setInterval(async () => {
+if (Network.isOnline()) {
+await GameState.save(true);
+if (Math.random() < 0.1) {
+const marketRes = await Network.post('market_listings');
+if (marketRes.success) {
+GameState.marketCatalog = marketRes.items || [];
+await Storage.set('marketCatalog', GameState.marketCatalog);
+UIRenderer.renderApp('shop');
+}
+}
+}
+}, 30000);
+// ────────────────────────────────────────────────────────────────
+// 🚀 INIT
+// ────────────────────────────────────────────────────────────────
+(async () => {
+await GameState.init();
+UIRenderer.renderApp(UIRenderer.getCurrentTab());
+WorldPulse.init();
+processArticleClaim(); // ← PROSES KLAIM SAAT LOAD
+})();
+</script>
+</body>
+</html>
